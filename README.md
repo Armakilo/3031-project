@@ -6,11 +6,11 @@ We will attach prefixes to data when sending or reciving data from the Elegoo.
 Prefixes are 3 charachters then a colon (:).
 
 ### Sending Data
-mXs: - Motor X Position
-gxs: - Gripper x-coordinate Position
-gys: - Gripper y-coordinate Position
-gzs: - Gripper z-coordinate Position
-cmd: - Specific Command
+mXs: - Motor X Position  
+gxs: - Gripper x-coordinate Position  
+gys: - Gripper y-coordinate Position  
+gzs: - Gripper z-coordinate Position  
+cmd: - Specific Command  
 
 ### Reciving Data
 mXp: - Motor X Position  
