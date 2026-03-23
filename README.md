@@ -6,9 +6,9 @@ We will attach prefixes to data when sending or reciving data from the Elegoo.
 Prefixes are 3 charachters then a colon (:).
 
 ### Sending Data
-mXs: - Motor X Position
+mXs: - Motor X Position  
 
 ### Reciving Data
-mXp: - Motor X Position
-mXv: - Motor X Velocity
-mXi: - Motor X Current
+mXp: - Motor X Position  
+mXv: - Motor X Velocity  
+mXi: - Motor X Current  
