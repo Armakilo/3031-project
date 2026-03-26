@@ -7,12 +7,21 @@ Prefixes are 3 charachters then a colon (:).
 
 ### Sending Data
 mXs: - Motor X Position  
+* :fwd - Makes the position increaase  
+* :rev - Makes the position increase
+
 gxs: - Gripper x-coordinate Position  
 gys: - Gripper y-coordinate Position  
-gzs: - Gripper z-coordinate Position  
+gzs: - Gripper z-coordinate Position
+* :inc - increase coordinate  
+* :dec - decrease coordinate
+
 cmd: - Specific Command  
+* :diag - diagonal line  
+* :obst - move over obstacle  
 
 ### Reciving Data
 mXp: - Motor X Position  
 mXv: - Motor X Velocity  
-mXi: - Motor X Current  
+* All these just have the position/velocity in degrees/rads/sec following them
+
