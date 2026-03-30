@@ -18,7 +18,7 @@ uint32_t time = 0;
 float dt = 0;
 
 // PID summation variables
-float setpoint = 60;
+float setpoint = 30;
 
 float previous_error = 0;
 float error = 0;
@@ -26,7 +26,7 @@ float error = 0;
 // PID gain variables
 
 // Proportional variables
-float kp = 5;
+float kp = 1;
 
 // Integral variables
 float ki = 5;
@@ -47,16 +47,16 @@ uint32_t previous_time_func = 0;
 uint32_t time_func = 0;
 float dt_func = 0;
 
-struct PID {
-  float kp;
-  float ki;
-  float kp;
+// struct PID {
+//   float kp;
+//   float ki;
+//   float kp;
 
-  uint32_t dt;
+//   uint32_t dt;
 
-  float previous_error;
-  float error;
-};
+//   float previous_error;
+//   float error;
+// };
 
 void setup() {
   Serial.begin(9600);
@@ -66,6 +66,12 @@ void setup() {
 }
 
 void loop() {
+  // if (micros() > 5000000) {
+  //   setpoint = -30;
+  // }
+
+  Serial.println(position);
+
   // Determine time between motor updates
   time = micros();
   dt = ((float) (time - previous_time))/1.0e6;
