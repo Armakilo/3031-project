@@ -18,7 +18,8 @@ gzs: - Gripper z-coordinate Position
 
 cmd: - Specific Command  
 * :diag - diagonal line  
-* :obst - move over obstacle  
+* :obst - move over obstacle
+* :home - go to home position  
 
 ### Reciving Data
 mXp: - Motor X Position  
