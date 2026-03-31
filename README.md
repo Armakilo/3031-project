@@ -6,7 +6,7 @@ We will attach prefixes to data when sending or reciving data from the Elegoo.
 Prefixes are 3 charachters then a colon (:).
 
 ### Sending Data
-mXs: - Motor X Position  
+mAs: - Motor A Position  
 * :fwd - Makes the position increaase  
 * :rev - Makes the position increase
 
@@ -22,7 +22,7 @@ cmd: - Specific Command
 * :home - go to home position  
 
 ### Reciving Data
-mXp: - Motor X Position  
-mXv: - Motor X Velocity  
+mAp: - Motor A Position  
+mAv: - Motor A Velocity  
 * All these just have the position/velocity in degrees/rads/sec following them
 
