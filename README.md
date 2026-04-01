@@ -10,9 +10,9 @@ mAs: - Motor A Position
 * :fwd - Makes the position increaase  
 * :rev - Makes the position increase
 
-gxs: - Gripper x-coordinate Position  
-gys: - Gripper y-coordinate Position  
-gzs: - Gripper z-coordinate Position
+grs: - Gripper radius  
+ghs: - Gripper height  
+gts: - Gripper (base) angle (RCS)
 * :inc - increase coordinate  
 * :dec - decrease coordinate
 
