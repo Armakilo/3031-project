@@ -34,7 +34,7 @@
 
 #define CPR_1 2950
 #define CPR_2 2950
-#define CPR_3 10200
+#define CPR_3 2950
 
 #define PID_SAMPLING_TIME 100
 
@@ -87,17 +87,17 @@ float angle_difference_1 = 0;
 float angle_difference_2 = 0;
 float angle_difference_3 = 0;
 
-float initial_angle_1 = 0;
-float initial_angle_2 = 0;
-float initial_angle_3 = 0;
+float initial_angle_1 = 180;
+float initial_angle_2 = 180;
+float initial_angle_3 = 180;
 
 float angle_1 = 0;
 float angle_2 = 0;
 float angle_3 = 0;
 
-float previous_angle_1 = 0;
-float previous_angle_2 = 0;
-float previous_angle_3 = 0;
+float previous_angle_1 = initial_angle_1;
+float previous_angle_2 = initial_angle_2;
+float previous_angle_3 = initial_angle_3;
 
 // Velocity variables for each motor
 float velocity_1 = 0;
@@ -105,9 +105,9 @@ float velocity_2 = 0;
 float velocity_3 = 0;
 
 // Setpoint variables for each motor
-float angle_setpoint_1 = 0;
-float angle_setpoint_2 = 0;
-float angle_setpoint_3 = 0;
+float angle_setpoint_1 = initial_angle_1;
+float angle_setpoint_2 = initial_angle_2;
+float angle_setpoint_3 = initial_angle_3;
 
 float velocity_setpoint_1 = 0;
 float velocity_setpoint_2 = 0;
@@ -132,7 +132,7 @@ PIDController pid_2 = { 1.25, 0, 0,
                         0};
 
 /* Motor 3 PID declaration */
-PIDController pid_3 = { 0.2, 0.1, 0,
+PIDController pid_3 = { 1.25, 0, 0,
                         0,
                         -255, 255,
                         -127, 127,
@@ -377,9 +377,9 @@ ISR(TIMER1_COMPA_vect) {
                                       angle_setpoint_3, 
                                       velocity_setpoint_3, 
                                       100, 
-                                      1, 
+                                      3, 
                                       PID_SAMPLING_TIME/1000.0f, 
-                                      3);
+                                      1);
 
   /* Update all PIDs */
   PIDController_Update(&pid_1, velocity_setpoint_1, velocity_1);
@@ -389,6 +389,7 @@ ISR(TIMER1_COMPA_vect) {
   setMotor(pid_1.out, PWM_IN1_1, PWM_IN2_1);
   setMotor(pid_2.out, PWM_IN1_2, PWM_IN2_2);
   setMotor(pid_3.out, PWM_IN1_3, PWM_IN2_3);
+  // }
 }
 
 void setup() {
@@ -505,7 +506,7 @@ void loop() {
     angle_setpoint_3 = 0;
   }
 
-  delay(200);
+  delay(500);
   Serial.print("Time = ");
   Serial.print(millis());
   
@@ -521,7 +522,7 @@ void loop() {
   Serial.print(velocity_1);
   Serial.print(" RPM, ");
   Serial.print(angle_1);
-  Serial.print(" degrees, ");
+  Serial.print(" degrees");
   Serial.println();
 
 
@@ -536,9 +537,7 @@ void loop() {
   Serial.print(velocity_3);
   Serial.print(" RPM, ");
   Serial.print(angle_3);
-  Serial.print(" degrees, ");
-  Serial.print(encoder_count_3);
-  Serial.print(" click");
+  Serial.print(" degrees");
   Serial.println("\n");
 
 
