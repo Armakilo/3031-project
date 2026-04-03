@@ -32,9 +32,9 @@
 #define LIMIT_SWITCH_2 20
 #define LIMIT_SWITCH_3 21
 
-#define CPR_1 2950
-#define CPR_2 2950
-#define CPR_3 2950
+#define CPR_1 10200
+#define CPR_2 2550
+#define CPR_3 2550
 
 #define PID_SAMPLING_TIME 100
 
@@ -87,9 +87,9 @@ float angle_difference_1 = 0;
 float angle_difference_2 = 0;
 float angle_difference_3 = 0;
 
-float initial_angle_1 = 180;
-float initial_angle_2 = 180;
-float initial_angle_3 = 180;
+float initial_angle_1 = 0;
+float initial_angle_2 = 50;
+float initial_angle_3 = 210;
 
 float angle_1 = 0;
 float angle_2 = 0;
@@ -114,7 +114,7 @@ float velocity_setpoint_2 = 0;
 float velocity_setpoint_3 = 0;
 
 /* Motor 1 PID declaration */
-PIDController pid_1 = { 1.125, 0, 0,
+PIDController pid_1 = { 1.25, 0, 0,
                         0,
                         -255, 255,
                         -127, 127,
@@ -123,7 +123,7 @@ PIDController pid_1 = { 1.125, 0, 0,
                         0};
 
 /* Motor 2 PID declaration */
-PIDController pid_2 = { 1.25, 0, 0,
+PIDController pid_2 = { 20, 1, 0,
                         0,
                         -255, 255,
                         -127, 127,
@@ -132,7 +132,7 @@ PIDController pid_2 = { 1.25, 0, 0,
                         0};
 
 /* Motor 3 PID declaration */
-PIDController pid_3 = { 1.25, 0, 0,
+PIDController pid_3 = { 20, 1, 0,
                         0,
                         -255, 255,
                         -127, 127,
@@ -228,6 +228,7 @@ float PIDController_Update(PIDController *pid, float setpoint, float measurement
 // Initial value and final value zero
 float motionProfile(float position, float final_position, float velocity, float max_velocity, float acceleration, float update_time, float max_error) {
   float error = final_position - position;
+  // Serial.println(error);
   if (fabs(error) <= max_error) {
     return 0;
   }
@@ -303,6 +304,7 @@ void home(void) {
 
 /* Interrupt functions */
 void readEncoder_1() {
+  // sei();
   uint8_t valueRead = digitalRead(ENCODER_B_1);
   if (valueRead) {
     encoder_count_1++;
@@ -312,6 +314,7 @@ void readEncoder_1() {
 }
 
 void readEncoder_2() {
+  // sei();
   uint8_t valueRead = digitalRead(ENCODER_B_2);
   if (valueRead) {
     encoder_count_2++;
@@ -321,6 +324,7 @@ void readEncoder_2() {
 }
 
 void readEncoder_3() {
+  // sei();
   uint8_t valueRead = digitalRead(ENCODER_B_3);
   if (valueRead) {
     encoder_count_3++;
@@ -333,6 +337,7 @@ uint8_t toggle = 0;
 uint8_t pid_enable = 0;
 
 ISR(TIMER1_COMPA_vect) {
+  sei();
   // if (pid_enable) {
   digitalWrite(13, toggle);
   toggle = ~toggle;
@@ -464,47 +469,54 @@ void setup() {
 char bytes[50];
 
 void loop() {
+  // angle_setpoint_3 = 180;
   if (millis() < 10000) {
     angle_setpoint_1 = 360;
-    angle_setpoint_2 = 360;
-    angle_setpoint_3 = 360;
+    angle_setpoint_2 = 90;
+    angle_setpoint_3 = 180;
   }
 
   if (millis() > 20000) {
     angle_setpoint_1 = 100;
-    angle_setpoint_2 = 100;
-    angle_setpoint_3 = 100;
+    angle_setpoint_2 = 50;
+    angle_setpoint_3 = 210;
   }
 
   if (millis() > 30000) {
     angle_setpoint_1 = 80;
-    angle_setpoint_2 = 80;
-    angle_setpoint_3 = 80;
+    angle_setpoint_2 = 90;
+    angle_setpoint_3 = 180;
   }
 
   if (millis() > 40000) {
-    angle_setpoint_1 = 360;
-    angle_setpoint_2 = 360;
-    angle_setpoint_3 = 360;
+    angle_setpoint_1 = 80;
+    angle_setpoint_2 = 135;
+    angle_setpoint_3 = 150;
   }
 
-  if (millis() > 50000) {
-    angle_setpoint_1 = 720;
-    angle_setpoint_2 = 720;
-    angle_setpoint_3 = 720;
-  }
+  // if (millis() > 40000) {
+  //   angle_setpoint_1 = 360;
+  //   angle_setpoint_2 = 360;
+  //   angle_setpoint_3 = 360;
+  // }
 
-  if (millis() > 60000) {
-    angle_setpoint_1 = 540;
-    angle_setpoint_2 = 540;
-    angle_setpoint_3 = 540;
-  }
+  // if (millis() > 50000) {
+  //   angle_setpoint_1 = 720;
+  //   angle_setpoint_2 = 720;
+  //   angle_setpoint_3 = 720;
+  // }
 
-  if (millis() > 70000) {
-    angle_setpoint_1 = 0;
-    angle_setpoint_2 = 0;
-    angle_setpoint_3 = 0;
-  }
+  // if (millis() > 60000) {
+  //   angle_setpoint_1 = 540;
+  //   angle_setpoint_2 = 540;
+  //   angle_setpoint_3 = 540;
+  // }
+
+  // if (millis() > 70000) {
+  //   angle_setpoint_1 = 0;
+  //   angle_setpoint_2 = 0;
+  //   angle_setpoint_3 = 0;
+  // }
 
   delay(500);
   Serial.print("Time = ");
@@ -529,15 +541,25 @@ void loop() {
   Serial.print("Readings: Velocity 2 = ");
   Serial.print(velocity_2);
   Serial.print(" RPM, ");
+  Serial.print("Velocity 2 Setpoint = ");
+  Serial.print(velocity_setpoint_2);
+  Serial.print(" RPM, ");
   Serial.print(angle_2);
-  Serial.print(" degrees");
+  Serial.print(" degrees, ");
+  Serial.print(pid_2.out);
+  Serial.print(" PID 2 output");
   Serial.println();
 
   Serial.print("Readings: Velocity 3 = ");
   Serial.print(velocity_3);
   Serial.print(" RPM, ");
+  Serial.print("Velocity 3 Setpoint = ");
+  Serial.print(velocity_setpoint_3);
+  Serial.print(" RPM, ");
   Serial.print(angle_3);
-  Serial.print(" degrees");
+  Serial.print(" degrees, ");
+  Serial.print(pid_3.out);
+  Serial.print(" PID 3 output");
   Serial.println("\n");
 
 
