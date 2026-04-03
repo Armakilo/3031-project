@@ -1,4 +1,4 @@
-#include <TimerOne.h>
+// Limit PID output if necessary for speed regulation?
 
 /* Clock frequency */
 #define CLK_FREQUENCY 16000000
@@ -27,12 +27,16 @@
 #define PWM_IN1_3 45
 #define PWM_IN2_3 46
 
+/* Motor limit switches */
+#define LIMIT_SWITCH_1 19
+#define LIMIT_SWITCH_2 20
+#define LIMIT_SWITCH_3 21
 
-#define CPR_1 2100
+#define CPR_1 2950
 #define CPR_2 2950
-#define CPR_3 2950
+#define CPR_3 10200
 
-#define PID_SAMPLING_TIME 50
+#define PID_SAMPLING_TIME 100
 
 /* Struct definitions */
 typedef struct {
@@ -71,9 +75,21 @@ uint32_t time_to_execute = PID_SAMPLING_TIME;
 // Hold these positions when time to update
 
 /* Position hold variables */
+int32_t previous_encoder_count_1 = 0;
+int32_t previous_encoder_count_2 = 0;
+int32_t previous_encoder_count_3 = 0;
+
 int32_t encoder_count_1 = 0;
 int32_t encoder_count_2 = 0;
 int32_t encoder_count_3 = 0;
+
+float angle_difference_1 = 0;
+float angle_difference_2 = 0;
+float angle_difference_3 = 0;
+
+float initial_angle_1 = 0;
+float initial_angle_2 = 0;
+float initial_angle_3 = 0;
 
 float angle_1 = 0;
 float angle_2 = 0;
@@ -89,12 +105,16 @@ float velocity_2 = 0;
 float velocity_3 = 0;
 
 // Setpoint variables for each motor
-float setpoint_1 = 0;
-float setpoint_2 = 0;
-float setpoint_3 = 0;
+float angle_setpoint_1 = 0;
+float angle_setpoint_2 = 0;
+float angle_setpoint_3 = 0;
+
+float velocity_setpoint_1 = 0;
+float velocity_setpoint_2 = 0;
+float velocity_setpoint_3 = 0;
 
 /* Motor 1 PID declaration */
-PIDController pid_1 = { 0.7, 0.05, 0,
+PIDController pid_1 = { 1.125, 0, 0,
                         0,
                         -255, 255,
                         -127, 127,
@@ -103,7 +123,7 @@ PIDController pid_1 = { 0.7, 0.05, 0,
                         0};
 
 /* Motor 2 PID declaration */
-PIDController pid_2 = { 0.25, 0.1, 0,
+PIDController pid_2 = { 1.25, 0, 0,
                         0,
                         -255, 255,
                         -127, 127,
@@ -149,6 +169,8 @@ PIDController pid_3 = { 0.2, 0.1, 0,
 
 /* Max velocity profile */
 // float max_velocity_profile[100] = {0};
+
+/* PID functions */
 
 void PIDController_Init(PIDController *pid) {
 	/* Clear controller variables */
@@ -201,189 +223,45 @@ float PIDController_Update(PIDController *pid, float setpoint, float measurement
   return pid->out;
 }
 
+/* Functions */
+
 // Initial value and final value zero
-void trapezoid(float *array, float slope, float max_value, float sampling_time, float time) {
-  uint16_t samples = time/sampling_time;
-  uint16_t samples_slopes = max_value/(slope*sampling_time);
-  for (uint16_t i = 0; i < samples_slopes; i++) {
-    array[i] = slope*sampling_time*i;
+float motionProfile(float position, float final_position, float velocity, float max_velocity, float acceleration, float update_time, float max_error) {
+  float error = final_position - position;
+  if (fabs(error) <= max_error) {
+    return 0;
   }
 
-  for (uint16_t i = samples_slopes; i < samples + samples_slopes; i++) {
-    array[i] = max_value;
+  float dir = 0;
+  if (error > 0) {
+    dir = 1.0f;
+  } else {
+    dir = -1.0f;
   }
 
-  for (uint16_t i = samples + samples_slopes; i < samples + samples_slopes*2; i++) {
-    //array[i] = max_value + slope*sampling_time*(samples + samples_slopes - 1 - i);
-    array[i] = array[i-1] - slope*sampling_time;
+  float v = velocity;
+  float v_along = v*dir;
+
+  float stopping_distance = v_along*v_along/(2.0f*acceleration);
+
+  if (stopping_distance >= fabs(error)) {
+    // no accelerate
+    v_along -= acceleration*update_time;
+  } else if (v_along < max_velocity) {
+    // Accelerate only if below max velocidwty
+    v_along += acceleration*update_time;
+  } else {
+    v_along = max_velocity;
+  }
+
+  if (v_along > max_velocity) {
+    v_along = max_velocity;
+  }
+  if (v_along < 0) {
+    v_along = 0;
   }
   
-  for (uint16_t i = 0; i < samples + samples_slopes*2; i++) {
-      Serial.print("Index: ");
-      Serial.print(i);
-      Serial.print(" Value: ");
-      Serial.println(array[i]);
-  } 
-}
-
-/* Zeros motors to microswitch to develop reference */
-void home(void) {
-
-}
-
-// float path[1500] = {0};
-
-void setup() {
-  Serial.begin(115200);
-
-  /* Disables interrupts */
-  noInterrupts();
-  /* Configure PWM pins to be ~3.9 kHz */
-  TCCR4B = TCCR4B & 0b11111010;
-  TCCR5B = TCCR4B & 0b11111010;
-  /* Enables interrupts */
-  interrupts();
-
-  // trapezoid(path, 40, 80, 0.05, 10);
-  delay(5000);
-
-
-  PIDController_Init(&pid_1);
-  PIDController_Init(&pid_2);
-  PIDController_Init(&pid_3);
-
-  /* Setup pins for motor 1 */
-  pinMode(ENCODER_A_1, INPUT);
-  pinMode(ENCODER_B_1, INPUT);
-
-  /* Setup pins for motor 2 */
-  pinMode(ENCODER_A_2, INPUT);
-  pinMode(ENCODER_B_2, INPUT);
-
-  /* Setup pins for motor 3 */ 
-  pinMode(ENCODER_A_3, INPUT);
-  pinMode(ENCODER_B_3, INPUT); 
-
-  /* Setup ISR for motor 1 */
-  attachInterrupt(digitalPinToInterrupt(ENCODER_A_1), readEncoder_1, RISING);
-
-  /* Setup ISR for motor 2 */
-  attachInterrupt(digitalPinToInterrupt(ENCODER_A_2), readEncoder_2, RISING);
-
-  /* Setup ISR for motor 3 */
-  attachInterrupt(digitalPinToInterrupt(ENCODER_A_3), readEncoder_3, RISING);
-
-  setpoint_1 = 0;
-  setpoint_2 = 0;
-  setpoint_3 = 0;
-
-  // home();
-
-  time_to_execute = millis() + PID_SAMPLING_TIME;
-}
-
-int i = 0;
-
-float int_position = 0;
-
-void loop() {
-  if (millis() > time_to_execute) {
-    time_to_execute += PID_SAMPLING_TIME;
-
-    if (millis() > 7000) {
-      setpoint_1 = 360;
-      setpoint_2 = 360;
-      setpoint_3 = 360;
-    }
-
-    // if (millis() > 30000) {
-    //   setpoint_1 = 0;
-    //   setpoint_2 = 0;
-    //   setpoint_3 = 0;
-    // }
-
-
-    // if (i < 1500) {
-    //   setpoint_1 = path[i];
-    //   i++;
-    // }
-
-    /* Hold all angular positions for calculations */
-    angle_1 = encoder_count_1;
-    angle_2 = encoder_count_2;
-    angle_3 = encoder_count_3;
-
-    /* Compute position as an angle */
-    angle_1 = angle_1*360.0f/CPR_1;
-    angle_2 = angle_2*360.0f/CPR_2;
-    angle_3 = angle_3*360.0f/CPR_3;
-
-
-    /* Calculate angular velocities of all motors */
-    velocity_1 = (angle_1 - previous_angle_1)/(PID_SAMPLING_TIME/1000.0f)*60.0f/360.0f;
-    velocity_2 = (angle_2 - previous_angle_2)/(PID_SAMPLING_TIME/1000.0f)*60.0f/360.0f;
-    velocity_3 = (angle_3 - previous_angle_3)/(PID_SAMPLING_TIME/1000.0f)*60.0f/360.0f;
-
-    /* Hold the previous angular positions of all motors */
-    previous_angle_1 = angle_1;
-    previous_angle_2 = angle_2;
-    previous_angle_3 = angle_3;
-
-    // int_position += velocity_1*((PID_SAMPLING_TIME/1000.0)/60.0);
-
-    /* Update all PIDs */
-    PIDController_Update(&pid_1, setpoint_1, angle_1);
-    PIDController_Update(&pid_2, setpoint_2, angle_2);
-    PIDController_Update(&pid_3, setpoint_3, angle_3);
-
-    // PIDController_Update(&pid_1, setpoint_1, velocity_1);
-    // PIDController_Update(&pid_2, setpoint_2, velocity_2);
-    // PIDController_Update(&pid_3, setpoint_3, velocity_3);
-
-    /* Update all motor PWM signals */
-    // if (i == 440) {
-    //   setMotor(0, PWM_IN1_1, PWM_IN2_1);
-    // } else {
-    setMotor(pid_1.out, PWM_IN1_1, PWM_IN2_1);
-    setMotor(pid_2.out, PWM_IN1_2, PWM_IN2_2);
-    setMotor(pid_3.out, PWM_IN1_3, PWM_IN2_3);
-    // }
-    // add others later
-
-    Serial.print("Time = ");
-    Serial.print(millis());
-    
-    Serial.print(", Setpoint 1 = ");
-    Serial.print(setpoint_1);
-    Serial.print(", Setpoint 2 = ");
-    Serial.print(setpoint_2);
-    Serial.print(", Setpoint 3 = ");
-    Serial.print(setpoint_3);
-    Serial.println();
-
-    Serial.print("Readings: Velocity 1 = ");
-    Serial.print(velocity_1);
-    Serial.print(" RPM, ");
-    Serial.print(angle_1);
-    Serial.print(" degrees, ");
-    Serial.println();
-
-
-    Serial.print("Readings: Velocity 2 = ");
-    Serial.print(velocity_2);
-    Serial.print(" RPM, ");
-    Serial.print(angle_2);
-    Serial.print(" degrees");
-    Serial.println();
-
-    Serial.print("Readings: Velocity 3 = ");
-    Serial.print(velocity_3);
-    Serial.print(" RPM, ");
-    Serial.print(angle_3);
-    Serial.print(" degrees");
-    Serial.println("\n");
-
-  }
+  return v_along * dir;
 }
 
 void setMotor(int16_t pwm_dutycycle, uint8_t pin_in1, uint8_t pin_in2) {
@@ -399,6 +277,31 @@ void setMotor(int16_t pwm_dutycycle, uint8_t pin_in1, uint8_t pin_in2) {
   }
 }
 
+/* Zeros motors to microswitch to develop reference */
+void home(void) {
+  // leaves interrupts disabled until home function finishes executing
+  // once home function finishes executing, reenable interrupts and make sure to set all angles to initial angle
+  // use setmotor to set pwm manually
+  setMotor(75, PWM_IN1_1, PWM_IN2_1);
+  setMotor(75, PWM_IN1_2, PWM_IN2_2);
+  setMotor(75, PWM_IN1_3, PWM_IN2_3);
+
+  while(!digitalRead(LIMIT_SWITCH_1) || !digitalRead(LIMIT_SWITCH_2) || !digitalRead(LIMIT_SWITCH_3)) {
+    if (digitalRead(LIMIT_SWITCH_1)) {
+      setMotor(0, PWM_IN1_1, PWM_IN2_1);
+    }
+
+    if (digitalRead(LIMIT_SWITCH_2)) {
+      setMotor(0, PWM_IN1_2, PWM_IN2_2);
+    }
+
+    if (digitalRead(LIMIT_SWITCH_3)) {
+      setMotor(0, PWM_IN1_3, PWM_IN2_3);
+    }
+  }
+}
+
+/* Interrupt functions */
 void readEncoder_1() {
   uint8_t valueRead = digitalRead(ENCODER_B_1);
   if (valueRead) {
@@ -425,3 +328,267 @@ void readEncoder_3() {
     encoder_count_3--;
   }
 }
+
+uint8_t toggle = 0;
+uint8_t pid_enable = 0;
+
+ISR(TIMER1_COMPA_vect) {
+  // if (pid_enable) {
+  digitalWrite(13, toggle);
+  toggle = ~toggle;
+
+  /* Hold all angular positions for calculations */
+  angle_difference_1 = encoder_count_1*360.0f/CPR_1;
+  angle_difference_2 = encoder_count_2*360.0f/CPR_2;
+  angle_difference_3 = encoder_count_3*360.0f/CPR_3;
+
+  /* Compute position as an angle */
+  angle_1 = initial_angle_1 + angle_difference_1;
+  angle_2 = initial_angle_2 + angle_difference_2;
+  angle_3 = initial_angle_3 + angle_difference_3;
+
+  /* Calculate angular velocities of all motors */
+  velocity_1 = (angle_1 - previous_angle_1)/(PID_SAMPLING_TIME/1000.0f)*60.0f/360.0f;
+  velocity_2 = (angle_2 - previous_angle_2)/(PID_SAMPLING_TIME/1000.0f)*60.0f/360.0f;
+  velocity_3 = (angle_3 - previous_angle_3)/(PID_SAMPLING_TIME/1000.0f)*60.0f/360.0f;
+
+  /* Hold the previous angular positions of all motors */
+  previous_angle_1 = angle_1;
+  previous_angle_2 = angle_2;
+  previous_angle_3 = angle_3;
+
+  velocity_setpoint_1 = motionProfile(angle_1, 
+                                      angle_setpoint_1, 
+                                      velocity_setpoint_1, 
+                                      100, 
+                                      3, 
+                                      PID_SAMPLING_TIME/1000.0f, 
+                                      1);
+
+  velocity_setpoint_2 = motionProfile(angle_2, 
+                                      angle_setpoint_2, 
+                                      velocity_setpoint_2, 
+                                      100, 
+                                      3, 
+                                      PID_SAMPLING_TIME/1000.0f, 
+                                      1);
+
+  velocity_setpoint_3 = motionProfile(angle_3, 
+                                      angle_setpoint_3, 
+                                      velocity_setpoint_3, 
+                                      100, 
+                                      1, 
+                                      PID_SAMPLING_TIME/1000.0f, 
+                                      3);
+
+  /* Update all PIDs */
+  PIDController_Update(&pid_1, velocity_setpoint_1, velocity_1);
+  PIDController_Update(&pid_2, velocity_setpoint_2, velocity_2);
+  PIDController_Update(&pid_3, velocity_setpoint_3, velocity_3);
+
+  setMotor(pid_1.out, PWM_IN1_1, PWM_IN2_1);
+  setMotor(pid_2.out, PWM_IN1_2, PWM_IN2_2);
+  setMotor(pid_3.out, PWM_IN1_3, PWM_IN2_3);
+}
+
+void setup() {
+  Serial.begin(115200);
+
+  /* Disables interrupts */
+  SREG = 0x7F;
+
+  /* Configure timer 1 for 50 ms interrupts */
+  TCCR1A = 0;
+  TCCR1B = 0;
+  TCNT1 = 0;
+
+  // Set compare match register for 50 Hz increments.
+  OCR1A = 12499; 
+  // Turn on CTC mode.
+  TCCR1B |= (1 << WGM12);
+  // Set CS12, CS11 and CS10 bits for 1024 prescaler.
+  TCCR1B |= (0 << CS12) | (1 << CS11) | (1 << CS10);
+  // Disable timer compare interrupt.
+  TIMSK1 |= (1 << OCIE1A);
+
+  /* Configure PWM pins to be ~3.9 kHz */
+  TCCR4B = TCCR4B & 0b11111010;
+  TCCR5B = TCCR5B & 0b11111010;
+
+  PIDController_Init(&pid_1);
+  PIDController_Init(&pid_2);
+  PIDController_Init(&pid_3);
+
+  /* Setup pins for motor 1 */
+  pinMode(ENCODER_A_1, INPUT);
+  pinMode(ENCODER_B_1, INPUT);
+  pinMode(LIMIT_SWITCH_1, INPUT);
+
+  /* Setup pins for motor 2 */
+  pinMode(ENCODER_A_2, INPUT);
+  pinMode(ENCODER_B_2, INPUT);
+  pinMode(LIMIT_SWITCH_2, INPUT);
+
+  /* Setup pins for motor 3 */ 
+  pinMode(ENCODER_A_3, INPUT);
+  pinMode(ENCODER_B_3, INPUT); 
+  pinMode(LIMIT_SWITCH_3, INPUT);
+
+  /* Setup ISR for motor 1 */
+  attachInterrupt(digitalPinToInterrupt(ENCODER_A_1), readEncoder_1, RISING);
+
+  /* Setup ISR for motor 2 */
+  attachInterrupt(digitalPinToInterrupt(ENCODER_A_2), readEncoder_2, RISING);
+
+  /* Setup ISR for motor 3 */
+  attachInterrupt(digitalPinToInterrupt(ENCODER_A_3), readEncoder_3, RISING);
+
+  encoder_count_1 = 0;
+  encoder_count_2 = 0;
+  encoder_count_3 = 0;
+
+  // setMotor(255, PWM_IN1_3, PWM_IN2_3);
+
+  /* Homing function (leave before interrupt enable)*/
+  // home();
+
+  /* Enables global interrupts */
+  SREG = 0xFF;
+
+  delay(5000);
+
+  // pid_enable = 1;
+}
+
+char bytes[50];
+
+void loop() {
+  if (millis() < 10000) {
+    angle_setpoint_1 = 360;
+    angle_setpoint_2 = 360;
+    angle_setpoint_3 = 360;
+  }
+
+  if (millis() > 20000) {
+    angle_setpoint_1 = 100;
+    angle_setpoint_2 = 100;
+    angle_setpoint_3 = 100;
+  }
+
+  if (millis() > 30000) {
+    angle_setpoint_1 = 80;
+    angle_setpoint_2 = 80;
+    angle_setpoint_3 = 80;
+  }
+
+  if (millis() > 40000) {
+    angle_setpoint_1 = 360;
+    angle_setpoint_2 = 360;
+    angle_setpoint_3 = 360;
+  }
+
+  if (millis() > 50000) {
+    angle_setpoint_1 = 720;
+    angle_setpoint_2 = 720;
+    angle_setpoint_3 = 720;
+  }
+
+  if (millis() > 60000) {
+    angle_setpoint_1 = 540;
+    angle_setpoint_2 = 540;
+    angle_setpoint_3 = 540;
+  }
+
+  if (millis() > 70000) {
+    angle_setpoint_1 = 0;
+    angle_setpoint_2 = 0;
+    angle_setpoint_3 = 0;
+  }
+
+  delay(200);
+  Serial.print("Time = ");
+  Serial.print(millis());
+  
+  Serial.print(", Setpoint 1 = ");
+  Serial.print(angle_setpoint_1);
+  Serial.print(", Setpoint 2 = ");
+  Serial.print(angle_setpoint_2);
+  Serial.print(", Setpoint 3 = ");
+  Serial.print(angle_setpoint_3);
+  Serial.println();
+
+  Serial.print("Readings: Velocity 1 = ");
+  Serial.print(velocity_1);
+  Serial.print(" RPM, ");
+  Serial.print(angle_1);
+  Serial.print(" degrees, ");
+  Serial.println();
+
+
+  Serial.print("Readings: Velocity 2 = ");
+  Serial.print(velocity_2);
+  Serial.print(" RPM, ");
+  Serial.print(angle_2);
+  Serial.print(" degrees");
+  Serial.println();
+
+  Serial.print("Readings: Velocity 3 = ");
+  Serial.print(velocity_3);
+  Serial.print(" RPM, ");
+  Serial.print(angle_3);
+  Serial.print(" degrees, ");
+  Serial.print(encoder_count_3);
+  Serial.print(" click");
+  Serial.println("\n");
+
+
+
+
+
+  // String command = Serial.readString();
+
+  // char awd[5] = "12345";
+
+  // char ccmd[10];
+  // command.toCharArray(ccmd, 10);
+
+
+
+  // char* pref = strtok(ccmd,":");
+  // char* suff = strtok(NULL,":");
+
+  // // Serial.println(awd);
+  // // Serial.println();
+  
+  //   if(pref == "m1s"){
+  //       if (suff == "fwd"){
+  //       angle_setpoint_1 += 10; 
+  //     }
+  //     else if (suff == "rev") {
+  //       angle_setpoint_1 -= 10;
+  //     }
+  //   }
+    
+  //   if(pref == "m2s"){
+  //       if (suff == "fwd"){
+  //       angle_setpoint_1 += 10; 
+  //     }
+  //     else if (suff == "rev") {
+  //       angle_setpoint_1 -= 10;
+  //     }
+  //   }
+
+  //   if(pref == "m3s"){
+  //       if (suff == "fwd"){
+  //       angle_setpoint_1 += 10; 
+  //     }
+  //     else if (suff == "rev") {
+  //       angle_setpoint_1 -= 10;
+  //     }
+  //   }
+
+  
+
+  
+}
+
