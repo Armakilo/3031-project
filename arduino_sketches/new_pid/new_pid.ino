@@ -15,26 +15,28 @@
 #define ENCODER_A_3 18
 #define ENCODER_B_3 26
 
+/* Change these pins to drive in the correct direction */
+
 /* Setup motor driver pins for motor 1 */
-#define PWM_IN1_1 6
-#define PWM_IN2_1 7
+#define PWM_IN1_1 7
+#define PWM_IN2_1 6
 
 /* Setup motor driver pins for motor 2 */
-#define PWM_IN1_2 8
-#define PWM_IN2_2 44
+#define PWM_IN1_2 44
+#define PWM_IN2_2 8
 
 /* Setup motor driver pins for motor 3 */
-#define PWM_IN1_3 45
-#define PWM_IN2_3 46
+#define PWM_IN1_3 46
+#define PWM_IN2_3 45
 
 /* Motor limit switches */
 #define LIMIT_SWITCH_1 19
 #define LIMIT_SWITCH_2 20
 #define LIMIT_SWITCH_3 21
 
-#define CPR_1 10200
-#define CPR_2 2550
-#define CPR_3 2550
+#define CPR_1 4156
+#define CPR_2 2554
+#define CPR_3 2554
 
 #define PID_SAMPLING_TIME 100
 
@@ -88,8 +90,8 @@ float angle_difference_2 = 0;
 float angle_difference_3 = 0;
 
 float initial_angle_1 = 0;
-float initial_angle_2 = 50;
-float initial_angle_3 = 210;
+float initial_angle_2 = 130;
+float initial_angle_3 = -34;
 
 float angle_1 = 0;
 float angle_2 = 0;
@@ -114,7 +116,7 @@ float velocity_setpoint_2 = 0;
 float velocity_setpoint_3 = 0;
 
 /* Motor 1 PID declaration */
-PIDController pid_1 = { 1.25, 0, 0,
+PIDController pid_1 = { 20, 0.5, 0,
                         0,
                         -255, 255,
                         -127, 127,
@@ -123,7 +125,7 @@ PIDController pid_1 = { 1.25, 0, 0,
                         0};
 
 /* Motor 2 PID declaration */
-PIDController pid_2 = { 20, 1, 0,
+PIDController pid_2 = { 20, 0.5, 0,
                         0,
                         -255, 255,
                         -127, 127,
@@ -132,7 +134,7 @@ PIDController pid_2 = { 20, 1, 0,
                         0};
 
 /* Motor 3 PID declaration */
-PIDController pid_3 = { 20, 1, 0,
+PIDController pid_3 = { 20, 0.5, 0,
                         0,
                         -255, 255,
                         -127, 127,
@@ -468,30 +470,25 @@ void setup() {
 
 char bytes[50];
 
+float angle_setpoint_1_path[7] = {initial_angle_1, 90, 180, 270, 180, 90, 0};
+float angle_setpoint_2_path[7] = {initial_angle_2, 45, 130, 45, 130, 45, 130};
+float angle_setpoint_3_path[7] = {initial_angle_3, 45, -30, 45, -30, 45, -30};
+
+uint32_t execute_time = 0;
+uint32_t i = 0;
+
 void loop() {
   // angle_setpoint_3 = 180;
-  if (millis() < 10000) {
-    angle_setpoint_1 = 360;
-    angle_setpoint_2 = 90;
-    angle_setpoint_3 = 180;
-  }
-
-  if (millis() > 20000) {
-    angle_setpoint_1 = 100;
-    angle_setpoint_2 = 50;
-    angle_setpoint_3 = 210;
-  }
-
-  if (millis() > 30000) {
-    angle_setpoint_1 = 80;
-    angle_setpoint_2 = 90;
-    angle_setpoint_3 = 180;
-  }
-
-  if (millis() > 40000) {
-    angle_setpoint_1 = 80;
-    angle_setpoint_2 = 135;
-    angle_setpoint_3 = 150;
+  if (millis() >= execute_time) {
+    execute_time += 10000;
+    Serial.print("Execute time: ");
+    Serial.println(execute_time);
+    angle_setpoint_1 = angle_setpoint_1_path[i]; 
+    angle_setpoint_2 = angle_setpoint_2_path[i]; 
+    angle_setpoint_3 = angle_setpoint_3_path[i]; 
+    if (i < 6) {
+      i++;
+    }
   }
 
   // if (millis() > 40000) {
