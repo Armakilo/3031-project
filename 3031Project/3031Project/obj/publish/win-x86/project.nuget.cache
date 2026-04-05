@@ -1,0 +1,31 @@
+{
+  "version": 2,
+  "dgSpecHash": "GdSyPsSy2Ug=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\Adam\\source\\repos\\3031Project\\3031Project\\3031Project.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Adam\\.nuget\\packages\\microsoft.net.illink.tasks\\10.0.5\\microsoft.net.illink.tasks.10.0.5.nupkg.sha512",
+    "C:\\Users\\Adam\\.nuget\\packages\\runtime.android-arm.runtime.native.system.io.ports\\10.0.5\\runtime.android-arm.runtime.native.system.io.ports.10.0.5.nupkg.sha512",
+    "C:\\Users\\Adam\\.nuget\\packages\\runtime.android-arm64.runtime.native.system.io.ports\\10.0.5\\runtime.android-arm64.runtime.native.system.io.ports.10.0.5.nupkg.sha512",
+    "C:\\Users\\Adam\\.nuget\\packages\\runtime.android-x64.runtime.native.system.io.ports\\10.0.5\\runtime.android-x64.runtime.native.system.io.ports.10.0.5.nupkg.sha512",
+    "C:\\Users\\Adam\\.nuget\\packages\\runtime.android-x86.runtime.native.system.io.ports\\10.0.5\\runtime.android-x86.runtime.native.system.io.ports.10.0.5.nupkg.sha512",
+    "C:\\Users\\Adam\\.nuget\\packages\\runtime.linux-arm.runtime.native.system.io.ports\\10.0.5\\runtime.linux-arm.runtime.native.system.io.ports.10.0.5.nupkg.sha512",
+    "C:\\Users\\Adam\\.nuget\\packages\\runtime.linux-arm64.runtime.native.system.io.ports\\10.0.5\\runtime.linux-arm64.runtime.native.system.io.ports.10.0.5.nupkg.sha512",
+    "C:\\Users\\Adam\\.nuget\\packages\\runtime.linux-bionic-arm64.runtime.native.system.io.ports\\10.0.5\\runtime.linux-bionic-arm64.runtime.native.system.io.ports.10.0.5.nupkg.sha512",
+    "C:\\Users\\Adam\\.nuget\\packages\\runtime.linux-bionic-x64.runtime.native.system.io.ports\\10.0.5\\runtime.linux-bionic-x64.runtime.native.system.io.ports.10.0.5.nupkg.sha512",
+    "C:\\Users\\Adam\\.nuget\\packages\\runtime.linux-musl-arm.runtime.native.system.io.ports\\10.0.5\\runtime.linux-musl-arm.runtime.native.system.io.ports.10.0.5.nupkg.sha512",
+    "C:\\Users\\Adam\\.nuget\\packages\\runtime.linux-musl-arm64.runtime.native.system.io.ports\\10.0.5\\runtime.linux-musl-arm64.runtime.native.system.io.ports.10.0.5.nupkg.sha512",
+    "C:\\Users\\Adam\\.nuget\\packages\\runtime.linux-musl-x64.runtime.native.system.io.ports\\10.0.5\\runtime.linux-musl-x64.runtime.native.system.io.ports.10.0.5.nupkg.sha512",
+    "C:\\Users\\Adam\\.nuget\\packages\\runtime.linux-x64.runtime.native.system.io.ports\\10.0.5\\runtime.linux-x64.runtime.native.system.io.ports.10.0.5.nupkg.sha512",
+    "C:\\Users\\Adam\\.nuget\\packages\\runtime.maccatalyst-arm64.runtime.native.system.io.ports\\10.0.5\\runtime.maccatalyst-arm64.runtime.native.system.io.ports.10.0.5.nupkg.sha512",
+    "C:\\Users\\Adam\\.nuget\\packages\\runtime.maccatalyst-x64.runtime.native.system.io.ports\\10.0.5\\runtime.maccatalyst-x64.runtime.native.system.io.ports.10.0.5.nupkg.sha512",
+    "C:\\Users\\Adam\\.nuget\\packages\\runtime.native.system.io.ports\\10.0.5\\runtime.native.system.io.ports.10.0.5.nupkg.sha512",
+    "C:\\Users\\Adam\\.nuget\\packages\\runtime.osx-arm64.runtime.native.system.io.ports\\10.0.5\\runtime.osx-arm64.runtime.native.system.io.ports.10.0.5.nupkg.sha512",
+    "C:\\Users\\Adam\\.nuget\\packages\\runtime.osx-x64.runtime.native.system.io.ports\\10.0.5\\runtime.osx-x64.runtime.native.system.io.ports.10.0.5.nupkg.sha512",
+    "C:\\Users\\Adam\\.nuget\\packages\\system.io.ports\\10.0.5\\system.io.ports.10.0.5.nupkg.sha512",
+    "C:\\Users\\Adam\\.nuget\\packages\\microsoft.netcore.app.runtime.win-x86\\10.0.5\\microsoft.netcore.app.runtime.win-x86.10.0.5.nupkg.sha512",
+    "C:\\Users\\Adam\\.nuget\\packages\\microsoft.windowsdesktop.app.runtime.win-x86\\10.0.5\\microsoft.windowsdesktop.app.runtime.win-x86.10.0.5.nupkg.sha512",
+    "C:\\Users\\Adam\\.nuget\\packages\\microsoft.aspnetcore.app.runtime.win-x86\\10.0.5\\microsoft.aspnetcore.app.runtime.win-x86.10.0.5.nupkg.sha512"
+  ],
+  "logs": []
+}
