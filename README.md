@@ -10,6 +10,9 @@ mAs: - Motor A Position
 * :fwd - Makes the position increaase  
 * :rev - Makes the position increase
 
+mAa: - Motor A angle  
+* Has the desired angle following it  
+
 grs: - Gripper radius  
 ghs: - Gripper height  
 gts: - Gripper (base) angle (RCS)
